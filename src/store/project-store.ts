@@ -9,6 +9,7 @@ import {
 } from '@/schema';
 
 export type Theme = 'light' | 'dark';
+export type FontFamilyKey = 'sans' | 'serif' | 'mono';
 
 interface ProjectState {
   document: ProjectDocument | null;
@@ -18,6 +19,9 @@ interface ProjectState {
 
   setTokenColor: (theme: Theme, token: SemanticColorToken, value: ColorValue) => void;
   setRadius: (value: string) => void;
+  setFontFamily: (family: FontFamilyKey, value: string) => void;
+  setShadow: (name: string, value: string) => void;
+  removeShadow: (name: string) => void;
 
   upsertOverride: (override: ComponentOverride) => void;
   removeOverride: (componentId: string) => void;
@@ -72,6 +76,49 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         document: {
           ...document,
           tokens: { ...document.tokens, radius: { base: value } },
+        },
+      };
+    }),
+
+  setFontFamily: (family, value) =>
+    set((state) => {
+      const document = requireDocument(state.document);
+      return {
+        document: {
+          ...document,
+          tokens: {
+            ...document.tokens,
+            typography: {
+              ...document.tokens.typography,
+              fontFamily: { ...document.tokens.typography.fontFamily, [family]: value },
+            },
+          },
+        },
+      };
+    }),
+
+  setShadow: (name, value) =>
+    set((state) => {
+      const document = requireDocument(state.document);
+      return {
+        document: {
+          ...document,
+          tokens: {
+            ...document.tokens,
+            shadows: { ...document.tokens.shadows, [name]: value },
+          },
+        },
+      };
+    }),
+
+  removeShadow: (name) =>
+    set((state) => {
+      const document = requireDocument(state.document);
+      const { [name]: _removed, ...rest } = document.tokens.shadows;
+      return {
+        document: {
+          ...document,
+          tokens: { ...document.tokens, shadows: rest },
         },
       };
     }),

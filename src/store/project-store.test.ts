@@ -97,4 +97,20 @@ describe('useProjectStore', () => {
   it('mutations throw when no document is loaded', () => {
     expect(() => useProjectStore.getState().setRadius('1rem')).toThrow();
   });
+
+  it('setFontFamily replaces only the targeted family', () => {
+    useProjectStore.getState().load(buildValidDocument());
+    useProjectStore.getState().setFontFamily('sans', '"Geist", sans-serif');
+    const doc = useProjectStore.getState().document;
+    expect(doc?.tokens.typography.fontFamily.sans).toBe('"Geist", sans-serif');
+    expect(doc?.tokens.typography.fontFamily.serif).toBe('ui-serif, Georgia, serif');
+  });
+
+  it('setShadow adds a new entry; removeShadow drops it', () => {
+    useProjectStore.getState().load(buildValidDocument());
+    useProjectStore.getState().setShadow('xl', '0 20px 25px -5px rgb(0 0 0 / 0.1)');
+    expect(useProjectStore.getState().document?.tokens.shadows.xl).toContain('20px 25px');
+    useProjectStore.getState().removeShadow('xl');
+    expect(useProjectStore.getState().document?.tokens.shadows.xl).toBeUndefined();
+  });
 });

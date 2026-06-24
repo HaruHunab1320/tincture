@@ -12,9 +12,10 @@ test('preview renders fixture components in light theme', async ({ page }) => {
     await expect(page.getByText(heading, { exact: true })).toBeVisible();
   }
 
-  // A representative component from each section.
-  await expect(page.getByRole('button', { name: 'Primary' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Destructive' })).toBeVisible();
+  // A representative component from each section, scoped to the preview.
+  const preview = page.locator('.tincture-preview');
+  await expect(preview.getByRole('button', { name: 'Primary' })).toBeVisible();
+  await expect(preview.getByRole('button', { name: 'Destructive' })).toBeVisible();
   await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
   await expect(page.getByText('Settings', { exact: true })).toBeVisible();
 });
@@ -30,8 +31,9 @@ test('preview-root receives token CSS variables and respects light/dark', async 
   await expect(preview).toHaveAttribute('style', /--primary:\s*oklch\(0\.208 0\.042 265\.755\)/);
   await expect(preview).toHaveAttribute('data-theme', 'light');
 
-  // Switching themes flips data-theme and the dark class.
-  await page.getByRole('button', { name: 'dark' }).click();
+  // Switching themes flips data-theme and the dark class. Use the canvas
+  // theme toggle (the panel's ColorPanel has its own light/dark tab).
+  await page.getByRole('main').getByRole('button', { name: 'dark' }).click();
   await expect(preview).toHaveAttribute('data-theme', 'dark');
   await expect(preview).toHaveClass(/(^|\s)dark(\s|$)/);
   // Dark --primary is oklch(0.929 0.013 255.508).
