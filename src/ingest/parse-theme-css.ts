@@ -5,7 +5,7 @@ import {
   isSemanticColorToken,
   type SemanticColorToken,
   type TokenState,
-} from '@/schema';
+} from '../schema';
 
 interface RootBlock {
   vars: Map<string, string>;

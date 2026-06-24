@@ -12,7 +12,7 @@ import {
   isSemanticColorToken,
   type Slot,
   type VariantAxis,
-} from '@/schema';
+} from '../schema';
 
 const INTERACTIVE_STATE_RE = /(?:^|[\s:])(hover|focus-visible|active|disabled):/g;
 const UTILITY_COLOR_PREFIXES = [

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { type ComponentMeta, type ProjectDocument, validateProjectDocument } from '@/schema';
+import { type ComponentMeta, type ProjectDocument, validateProjectDocument } from '../schema';
 import { parseComponentSource } from './parse-component-source';
 import { parseComponentsJson } from './parse-components-json';
 import { parseThemeCss } from './parse-theme-css';

@@ -1,4 +1,4 @@
-import { type ComponentsJsonShape, ComponentsJsonShapeSchema } from '@/schema';
+import { type ComponentsJsonShape, ComponentsJsonShapeSchema } from '../schema';
 
 /**
  * Parse a shadcn components.json (raw JSON text or already-parsed object)

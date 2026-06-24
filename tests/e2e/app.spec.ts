@@ -1,6 +1,64 @@
 import { expect, test } from '@playwright/test';
 
-test('app boots and renders the header', async ({ page }) => {
+test('preview renders fixture components in light theme', async ({ page }) => {
   await page.goto('/');
+
+  // Header shows the project metadata pulled from ingest.
   await expect(page.getByRole('heading', { name: 'Tincture' })).toBeVisible();
+  await expect(page.getByText(/shadcn-app · slate · 4 components/)).toBeVisible();
+
+  // The four component sections are all visible.
+  for (const heading of ['Buttons', 'Badges', 'Input', 'Card']) {
+    await expect(page.getByText(heading, { exact: true })).toBeVisible();
+  }
+
+  // A representative component from each section.
+  await expect(page.getByRole('button', { name: 'Primary' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Destructive' })).toBeVisible();
+  await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
+  await expect(page.getByText('Settings', { exact: true })).toBeVisible();
+});
+
+test('preview-root receives token CSS variables and respects light/dark', async ({ page }) => {
+  await page.goto('/');
+
+  const preview = page.locator('.tincture-preview');
+  await expect(preview).toBeVisible();
+
+  // The fixture's --primary in light theme is oklch(0.208 0.042 265.755).
+  // PreviewRoot copies it through verbatim onto its inline style.
+  await expect(preview).toHaveAttribute('style', /--primary:\s*oklch\(0\.208 0\.042 265\.755\)/);
+  await expect(preview).toHaveAttribute('data-theme', 'light');
+
+  // Switching themes flips data-theme and the dark class.
+  await page.getByRole('button', { name: 'dark' }).click();
+  await expect(preview).toHaveAttribute('data-theme', 'dark');
+  await expect(preview).toHaveClass(/(^|\s)dark(\s|$)/);
+  // Dark --primary is oklch(0.929 0.013 255.508).
+  await expect(preview).toHaveAttribute('style', /--primary:\s*oklch\(0\.929 0\.013 255\.508\)/);
+});
+
+test('a programmatic token mutation visibly restyles the preview', async ({ page }) => {
+  await page.goto('/');
+  const preview = page.locator('.tincture-preview');
+  await expect(preview).toBeVisible();
+
+  // Mutate the store directly to prove the fast-path subscription works.
+  await page.evaluate(() => {
+    const win = window as unknown as {
+      __TINCTURE_STORE__?: {
+        getState: () => {
+          setTokenColor: (theme: string, token: string, value: unknown) => void;
+        };
+      };
+    };
+    if (!win.__TINCTURE_STORE__) throw new Error('store not exposed on window');
+    win.__TINCTURE_STORE__.getState().setTokenColor('light', 'primary', {
+      kind: 'literal',
+      space: 'oklch',
+      value: 'oklch(0.7 0.2 30)',
+    });
+  });
+
+  await expect(preview).toHaveAttribute('style', /--primary:\s*oklch\(0\.7 0\.2 30\)/);
 });
