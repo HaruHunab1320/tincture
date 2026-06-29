@@ -218,6 +218,9 @@ export function parseComponentSource(input: ParseComponentSourceInput): Componen
   const states = deriveStates(classFragments);
   const slots = extractDataSlots(source);
 
+  const variantClasses: Record<string, string> = {};
+  for (const [key, cls] of cva.variantOptionClasses) variantClasses[key] = cls;
+
   return {
     id: input.id,
     registryName: input.registryName,
@@ -226,5 +229,6 @@ export function parseComponentSource(input: ParseComponentSourceInput): Componen
     slots,
     states,
     consumes,
+    variantClasses: Object.keys(variantClasses).length > 0 ? variantClasses : undefined,
   };
 }

@@ -34,5 +34,11 @@ export const ComponentMetaSchema = z.object({
     cssVars: z.array(z.string().min(1)),
     utilities: z.array(z.string()),
   }),
+  /**
+   * Original cva variant class strings keyed by `axisName.optionName`. The
+   * override editor reads these to display a baseline and to detect when an
+   * edit has been reverted to the original (which clears the override).
+   */
+  variantClasses: z.record(z.string(), z.string()).optional(),
 });
 export type ComponentMeta = z.infer<typeof ComponentMetaSchema>;

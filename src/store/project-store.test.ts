@@ -171,6 +171,47 @@ describe('useProjectStore', () => {
     expect(stops?.[1].declarations.opacity).toBe('0.9');
   });
 
+  it('setVariantClass adds an override for a single variant option', () => {
+    useProjectStore.getState().load(buildValidDocument());
+    useProjectStore
+      .getState()
+      .setVariantClass('button', 'size', 'sm', 'h-8 px-5 rounded-lg', 'h-8 px-3 rounded-md');
+    const overrides = useProjectStore.getState().document?.overrides ?? [];
+    expect(overrides).toHaveLength(1);
+    expect(overrides[0].componentId).toBe('button');
+    expect(overrides[0].variants?.size?.sm.replaceWith).toBe('h-8 px-5 rounded-lg');
+  });
+
+  it('setVariantClass clears the override when the new value matches the original', () => {
+    useProjectStore.getState().load(buildValidDocument());
+    useProjectStore.getState().setVariantClass('button', 'size', 'sm', 'h-8 px-5', 'h-8 px-3');
+    useProjectStore.getState().setVariantClass('button', 'size', 'sm', 'h-8 px-3', 'h-8 px-3');
+    expect(useProjectStore.getState().document?.overrides).toEqual([]);
+  });
+
+  it('setVariantClass with undefined clears the option-level override', () => {
+    useProjectStore.getState().load(buildValidDocument());
+    useProjectStore.getState().setVariantClass('button', 'size', 'sm', 'h-8 px-5', 'h-8 px-3');
+    useProjectStore.getState().setVariantClass('button', 'size', 'sm', undefined, 'h-8 px-3');
+    expect(useProjectStore.getState().document?.overrides).toEqual([]);
+  });
+
+  it('setVariantClass keeps unrelated variants on the same component', () => {
+    useProjectStore.getState().load(buildValidDocument());
+    useProjectStore.getState().setVariantClass('button', 'size', 'sm', 'A', 'orig-sm');
+    useProjectStore.getState().setVariantClass('button', 'variant', 'default', 'B', 'orig-def');
+    const v = useProjectStore.getState().document?.overrides[0].variants;
+    expect(v?.size?.sm.replaceWith).toBe('A');
+    expect(v?.variant?.default.replaceWith).toBe('B');
+  });
+
+  it('setVariantClass rejects unknown componentId', () => {
+    useProjectStore.getState().load(buildValidDocument());
+    expect(() =>
+      useProjectStore.getState().setVariantClass('no-such', 'size', 'sm', 'x', 'y'),
+    ).toThrow();
+  });
+
   it('removeKeyframeStop deletes a stop by index', () => {
     useProjectStore.getState().load(buildValidDocument());
     useProjectStore.getState().setKeyframe('pulse', {

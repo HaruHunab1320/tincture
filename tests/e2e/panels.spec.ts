@@ -11,6 +11,7 @@ test('property panel renders all sections', async ({ page }) => {
     'Durations',
     'Easings',
     'Keyframes',
+    'Overrides',
     'Component',
   ]) {
     await expect(page.getByRole('heading', { name: heading })).toBeVisible();
@@ -126,16 +127,54 @@ test('typography panel: editing --font-sans flows into the document', async ({ p
   expect(fontFamily).toBe('"Geist", sans-serif');
 });
 
+test('override panel: editing button size.sm flows into the document as a replaceWith delta', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  // The override panel's component select defaults to the first cva component
+  // (alphabetically: accordion has no variants → first match is `badge`).
+  // Switch to button so we can edit size.sm.
+  const overrideSelect = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Overrides' }) })
+    .locator('select');
+  await overrideSelect.selectOption('button');
+
+  const smTextarea = page.getByLabel('button size sm classes', { exact: true });
+  await smTextarea.fill('h-8 rounded-md px-5 text-lg');
+  await smTextarea.blur();
+
+  const override = await page.evaluate(() => {
+    const win = window as unknown as {
+      __TINCTURE_STORE__: { getState: () => { document: unknown } };
+    };
+    const doc = win.__TINCTURE_STORE__.getState().document as {
+      overrides: {
+        componentId: string;
+        variants?: Record<string, Record<string, { replaceWith?: string }>>;
+      }[];
+    };
+    return doc.overrides.find((o) => o.componentId === 'button');
+  });
+  expect(override?.variants?.size?.sm.replaceWith).toBe('h-8 rounded-md px-5 text-lg');
+});
+
 test('component panel: switching components updates the inspector', async ({ page }) => {
   await page.goto('/');
-  const select = page.locator('select');
-  // The component selector defaults to the first option in alphabetical order;
-  // with the full v4 fixture that's `accordion`.
+  // Scope to the ComponentPanel — the OverridePanel also has a <select>.
+  const componentPanel = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Component' }) });
+  const select = componentPanel.locator('select');
+  // The component inspector lists every component in alphabetical order;
+  // first is `accordion`.
   await expect(select).toHaveValue('accordion');
 
   await select.selectOption('button');
   await expect(page.getByText('components/ui/button.tsx', { exact: false })).toBeVisible();
-  // The button has two cva variant axes
-  await expect(page.locator('p').filter({ hasText: /^variant$/ })).toBeVisible();
-  await expect(page.locator('p').filter({ hasText: /^size$/ })).toBeVisible();
+  // The button has two cva variant axes — scope to the component panel since
+  // the override panel also renders axis headings.
+  await expect(componentPanel.locator('p').filter({ hasText: /^variant$/ })).toBeVisible();
+  await expect(componentPanel.locator('p').filter({ hasText: /^size$/ })).toBeVisible();
 });

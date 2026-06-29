@@ -48,6 +48,10 @@ const PROPERTY_TO_UTILITY_PREFIX: Record<string, string[]> = {
 };
 
 function resolveDelta(delta: ClassDelta, original: string): string {
+  // replaceWith short-circuits — the override editor's free-form text input
+  // produces this and we take it verbatim.
+  if (delta.replaceWith !== undefined) return delta.replaceWith;
+
   const tokens = original.split(/\s+/).filter(Boolean);
   const explicitRemove = new Set<string>(delta.removeUtilities ?? []);
 
@@ -55,7 +59,7 @@ function resolveDelta(delta: ClassDelta, original: string): string {
   // in the same family (if any). Replace in-place when possible — appending
   // to the end would gratuitously reorder the class string.
   const replacements: Array<{ from?: string; to: string }> = [];
-  for (const [property, value] of Object.entries(delta.set)) {
+  for (const [property, value] of Object.entries(delta.set ?? {})) {
     const to = PROPERTY_UTILITY_MAP[property]?.[value];
     if (!to) continue;
     const prefixes = PROPERTY_TO_UTILITY_PREFIX[property] ?? [];
@@ -82,12 +86,17 @@ function resolveDelta(delta: ClassDelta, original: string): string {
     if (explicitRemove.has(t)) continue;
     out.push(t);
   }
-  // Anything that didn't have an existing utility to replace gets appended.
+  // Property-mapped utilities that didn't have an existing slot to replace.
   for (const r of replacements) {
     if (!r.from && !inserted.has(r.to)) {
       out.push(r.to);
       inserted.add(r.to);
     }
+  }
+  // Raw utility additions — appended last; user-controlled text.
+  for (const utility of delta.addUtilities ?? []) {
+    if (!utility) continue;
+    if (!out.includes(utility)) out.push(utility);
   }
 
   return out.join(' ');

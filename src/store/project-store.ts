@@ -51,6 +51,19 @@ interface ProjectState {
   ) => void;
   removeKeyframeStop: (keyframeName: string, stopIndex: number) => void;
 
+  /**
+   * Set a full-string replacement on a single variant option. Passing the
+   * original class string clears the override; passing undefined clears the
+   * variant entirely. Empty override objects (no variants left) are pruned.
+   */
+  setVariantClass: (
+    componentId: string,
+    axis: string,
+    option: string,
+    newString: string | undefined,
+    originalString: string,
+  ) => void;
+
   upsertOverride: (override: ComponentOverride) => void;
   removeOverride: (componentId: string) => void;
 
@@ -298,6 +311,60 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           },
         },
       };
+    }),
+
+  setVariantClass: (componentId, axis, option, newString, originalString) =>
+    set((state) => {
+      const document = requireDocument(state.document);
+      const componentExists = document.components.some((c) => c.id === componentId);
+      if (!componentExists) {
+        throw new Error(`project-store: unknown componentId "${componentId}"`);
+      }
+
+      const existingIndex = document.overrides.findIndex((o) => o.componentId === componentId);
+      const existing = existingIndex >= 0 ? document.overrides[existingIndex] : undefined;
+
+      // Clearing the option: either passed undefined or matches the original.
+      const shouldClear = newString === undefined || newString === originalString;
+
+      // Build the next variants map for this component.
+      const nextVariants: NonNullable<ComponentOverride['variants']> = {
+        ...(existing?.variants ?? {}),
+      };
+      const axisMap = { ...(nextVariants[axis] ?? {}) };
+      if (shouldClear) {
+        delete axisMap[option];
+      } else {
+        axisMap[option] = { replaceWith: newString };
+      }
+      if (Object.keys(axisMap).length === 0) {
+        delete nextVariants[axis];
+      } else {
+        nextVariants[axis] = axisMap;
+      }
+
+      const variantsEmpty = Object.keys(nextVariants).length === 0;
+      const next: ComponentOverride = {
+        ...existing,
+        componentId,
+        variants: variantsEmpty ? undefined : nextVariants,
+      };
+
+      // Drop the whole override if nothing remains (no variants, no scopedVars).
+      const overrideIsEmpty = variantsEmpty && !next.scopedVars;
+      const overrides = (() => {
+        if (overrideIsEmpty) {
+          return existingIndex >= 0
+            ? document.overrides.filter((_, i) => i !== existingIndex)
+            : document.overrides;
+        }
+        if (existingIndex >= 0) {
+          return document.overrides.map((o, i) => (i === existingIndex ? next : o));
+        }
+        return [...document.overrides, next];
+      })();
+
+      return { document: { ...document, overrides } };
     }),
 
   upsertOverride: (override) =>

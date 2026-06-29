@@ -262,6 +262,52 @@ describe('cva rewrite', () => {
     // lg size is untouched
     expect(emitted.includes('h-10 rounded-md px-6 has-[>svg]:px-4')).toBe(true);
   });
+
+  it('addUtilities appends new utility tokens onto a variant option', () => {
+    const buttonPath = path.join(FIXTURE_ROOT, 'components/ui/button.tsx');
+    const original = fs.readFileSync(buttonPath, 'utf8');
+
+    const emitted = emitComponentSource({
+      source: original,
+      override: {
+        componentId: 'button',
+        variants: {
+          variant: {
+            default: { addUtilities: ['hover:bg-primary/75', 'shadow-md'] },
+          },
+        },
+      },
+    });
+
+    expect(emitted).not.toBe(original);
+    expect(emitted).toContain('hover:bg-primary/75');
+    expect(emitted).toContain('shadow-md');
+    // Untouched variants stay intact
+    expect(emitted.includes('bg-secondary text-secondary-foreground')).toBe(true);
+  });
+
+  it('replaceWith swaps the entire variant class string', () => {
+    const buttonPath = path.join(FIXTURE_ROOT, 'components/ui/button.tsx');
+    const original = fs.readFileSync(buttonPath, 'utf8');
+
+    const emitted = emitComponentSource({
+      source: original,
+      override: {
+        componentId: 'button',
+        variants: {
+          variant: {
+            ghost: { replaceWith: 'hover:bg-muted text-muted-foreground' },
+          },
+        },
+      },
+    });
+
+    expect(emitted).toContain('hover:bg-muted text-muted-foreground');
+    // Original ghost class string is gone.
+    expect(emitted).not.toContain(
+      'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+    );
+  });
 });
 
 describe('emitRegistryItem shape', () => {
