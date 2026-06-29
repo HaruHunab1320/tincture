@@ -5,7 +5,7 @@ import {
   SEMANTIC_COLOR_TOKENS,
   type SemanticColorToken,
   type TokenState,
-} from '@/schema';
+} from '../schema';
 
 function formatColorValue(value: ColorValue): string {
   if (value.kind === 'literal') return value.value;

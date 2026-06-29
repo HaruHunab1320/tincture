@@ -1,4 +1,4 @@
-import type { ComponentsJsonShape, ProjectDocument } from '@/schema';
+import type { ComponentsJsonShape, ProjectDocument } from '../schema';
 
 function buildOrdered(config: ComponentsJsonShape): Record<string, unknown> {
   const out: Record<string, unknown> = {};

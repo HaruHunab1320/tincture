@@ -1,4 +1,4 @@
-import type { ProjectDocument } from '@/schema';
+import type { ProjectDocument } from '../schema';
 import { emitComponentSource } from './emit-component-source';
 import { emitComponentsJson } from './emit-components-json';
 import { type EmitRegistryItemOptions, emitRegistryItem } from './emit-registry-item';

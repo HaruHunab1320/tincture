@@ -1,5 +1,5 @@
-import type { ColorValue, ProjectDocument } from '@/schema';
-import { SEMANTIC_COLOR_TOKENS } from '@/schema';
+import type { ColorValue, ProjectDocument } from '../schema';
+import { SEMANTIC_COLOR_TOKENS } from '../schema';
 
 function resolveColorValue(value: ColorValue): string {
   if (value.kind === 'literal') return value.value;

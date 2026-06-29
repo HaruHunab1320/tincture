@@ -1,5 +1,5 @@
 import { Project, SyntaxKind } from 'ts-morph';
-import type { ClassDelta, ComponentOverride } from '@/schema';
+import type { ClassDelta, ComponentOverride } from '../schema';
 
 export interface EmitComponentSourceInput {
   /** The original component source — preserved verbatim except for variant string edits. */
