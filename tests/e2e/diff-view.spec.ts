@@ -42,6 +42,24 @@ test('editing a token surfaces a globals.css diff', async ({ page }) => {
   ).toBeVisible();
 });
 
+test('export menu lists every shape with a live file count', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Choose export shape' }).click();
+
+  // The four shapes are all visible with their descriptions.
+  await expect(page.getByText('Theme files', { exact: true })).toBeVisible();
+  await expect(page.getByText('Registry theme item', { exact: true })).toBeVisible();
+  await expect(page.getByText('Component overrides', { exact: true })).toBeVisible();
+  await expect(page.getByText('Everything', { exact: true })).toBeVisible();
+
+  // Registry shape always has 1 file (always emitted as new); component
+  // overrides has 0 on a fresh document.
+  const registryOption = page.getByRole('button').filter({ hasText: 'Registry theme item' });
+  await expect(registryOption).toContainText('1 file');
+  const overridesOption = page.getByRole('button').filter({ hasText: 'Component overrides' });
+  await expect(overridesOption).toContainText('0 files');
+});
+
 test('escape closes the diff view', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Diff' }).click();

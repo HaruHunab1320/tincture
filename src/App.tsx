@@ -1,7 +1,7 @@
 import { fixtureOriginals, fixtureProject } from 'virtual:tincture-fixture';
 import { useEffect, useMemo, useState } from 'react';
 import { changedFiles, emitProject } from '@/codegen';
-import { DiffView, downloadProjectZip, PropertyPanel } from '@/editor';
+import { DiffView, ExportMenu, PropertyPanel } from '@/editor';
 import { Canvas } from '@/renderer';
 import { useProjectStore } from '@/store/project-store';
 
@@ -24,11 +24,9 @@ export default function App() {
   }, [document]);
   const changed = useMemo(() => changedFiles(emitted), [emitted]);
 
-  const handleExport = async () => {
-    if (!document) return;
-    const archive = `${document.meta.name}-${new Date().toISOString().slice(0, 10)}`;
-    await downloadProjectZip(emitted, archive);
-  };
+  const archiveName = document
+    ? `${document.meta.name}-${new Date().toISOString().slice(0, 10)}`
+    : 'tincture';
 
   return (
     <div className="flex h-screen flex-col bg-neutral-950 text-neutral-100">
@@ -55,13 +53,7 @@ export default function App() {
                 </span>
               ) : null}
             </button>
-            <button
-              type="button"
-              onClick={handleExport}
-              className="inline-flex items-center gap-2 rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-900 hover:bg-white"
-            >
-              Export
-            </button>
+            <ExportMenu files={emitted} archiveName={archiveName} />
           </div>
         ) : null}
       </header>

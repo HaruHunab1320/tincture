@@ -82,6 +82,16 @@ describe('useProjectStore', () => {
     expect(useProjectStore.getState().document?.overrides).toHaveLength(0);
   });
 
+  it('removePreset drops a preset by id', () => {
+    useProjectStore.getState().load(buildValidDocument());
+    const a = useProjectStore.getState().savePreset('a');
+    useProjectStore.getState().savePreset('b');
+    expect(useProjectStore.getState().document?.presets).toHaveLength(2);
+    useProjectStore.getState().removePreset(a.id);
+    const remaining = useProjectStore.getState().document?.presets ?? [];
+    expect(remaining.map((p) => p.name)).toEqual(['b']);
+  });
+
   it('savePreset captures current tokens; loadPreset restores them', () => {
     useProjectStore.getState().load(buildValidDocument());
     const original = useProjectStore.getState().document?.tokens.radius.base;

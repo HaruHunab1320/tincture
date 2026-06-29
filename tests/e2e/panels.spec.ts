@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test('property panel renders all sections', async ({ page }) => {
   await page.goto('/');
   for (const heading of [
+    'Presets',
     'Colors',
     'Radius',
     'Typography',
@@ -88,12 +89,15 @@ test('color panel: editing primary updates the preview', async ({ page }) => {
   const preview = page.locator('.tincture-preview');
   await expect(preview).toBeVisible();
 
-  await page
+  const colorSection = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Colors' }) });
+  await colorSection
     .getByRole('button')
     .filter({ hasText: /^primary$/ })
     .first()
     .click();
-  const colorInput = page.locator('input[type="text"]').first();
+  const colorInput = colorSection.locator('input[type="text"]').first();
   await colorInput.fill('oklch(0.7 0.2 30)');
   await colorInput.blur();
 
@@ -103,7 +107,10 @@ test('color panel: editing primary updates the preview', async ({ page }) => {
 test('radius panel: editing --radius updates the preview', async ({ page }) => {
   await page.goto('/');
   const preview = page.locator('.tincture-preview');
-  const radiusText = page.locator('input[type="text"]').filter({ hasText: '' }).nth(1);
+  const radiusSection = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Radius' }) });
+  const radiusText = radiusSection.locator('input[type="text"]');
   await radiusText.fill('1rem');
   await radiusText.blur();
   await expect(preview).toHaveAttribute('style', /--radius:\s*1rem/);

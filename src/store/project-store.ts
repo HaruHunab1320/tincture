@@ -69,6 +69,7 @@ interface ProjectState {
 
   savePreset: (name: string) => Preset;
   loadPreset: (id: string) => void;
+  removePreset: (id: string) => void;
 }
 
 function requireDocument(doc: ProjectDocument | null): ProjectDocument {
@@ -417,6 +418,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           ...document,
           tokens: preset.tokens,
           overrides: preset.overrides ?? [],
+        },
+      };
+    }),
+
+  removePreset: (id) =>
+    set((state) => {
+      const document = requireDocument(state.document);
+      return {
+        document: {
+          ...document,
+          presets: document.presets.filter((p) => p.id !== id),
         },
       };
     }),

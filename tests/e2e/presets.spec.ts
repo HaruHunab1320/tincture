@@ -1,0 +1,62 @@
+import { expect, test } from '@playwright/test';
+
+test('save preset → mutate tokens → load preset restores them', async ({ page }) => {
+  await page.goto('/');
+
+  // Save current state as a preset named "baseline".
+  const presetSection = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Presets' }) });
+  await presetSection.getByPlaceholder('preset name').fill('baseline');
+  await presetSection.getByRole('button', { name: 'save' }).click();
+  await expect(presetSection.getByText('baseline', { exact: true })).toBeVisible();
+
+  // Mutate tokens via the store so the test stays focused on the preset path.
+  await page.evaluate(() => {
+    const win = window as unknown as {
+      __TINCTURE_STORE__: {
+        getState: () => {
+          setRadius: (value: string) => void;
+          setTokenColor: (theme: string, token: string, value: unknown) => void;
+        };
+      };
+    };
+    const s = win.__TINCTURE_STORE__.getState();
+    s.setRadius('1.25rem');
+    s.setTokenColor('light', 'primary', {
+      kind: 'literal',
+      space: 'oklch',
+      value: 'oklch(0.7 0.2 30)',
+    });
+  });
+
+  // Load the preset and assert everything snapped back.
+  await presetSection.getByRole('button', { name: 'load' }).click();
+
+  const snapshot = await page.evaluate(() => {
+    const win = window as unknown as {
+      __TINCTURE_STORE__: { getState: () => { document: unknown } };
+    };
+    const doc = win.__TINCTURE_STORE__.getState().document as {
+      tokens: {
+        radius: { base: string };
+        colors: { light: { primary: { value: string } } };
+      };
+    };
+    return { radius: doc.tokens.radius.base, primary: doc.tokens.colors.light.primary.value };
+  });
+  expect(snapshot.radius).toBe('0.625rem');
+  expect(snapshot.primary).toBe('oklch(0.208 0.042 265.755)');
+});
+
+test('remove preset drops it from the list', async ({ page }) => {
+  await page.goto('/');
+  const presetSection = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Presets' }) });
+  await presetSection.getByPlaceholder('preset name').fill('ephemeral');
+  await presetSection.getByRole('button', { name: 'save' }).click();
+  await expect(presetSection.getByText('ephemeral', { exact: true })).toBeVisible();
+  await presetSection.getByRole('button', { name: 'remove' }).click();
+  await expect(presetSection.getByText('ephemeral', { exact: true })).toHaveCount(0);
+});
