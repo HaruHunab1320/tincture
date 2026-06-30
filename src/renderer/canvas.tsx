@@ -304,11 +304,11 @@ function DataDisplayShowcase() {
           <CardHeader>
             <div className="flex items-center gap-3">
               <Avatar>
-                <AvatarFallback>JG</AvatarFallback>
+                <AvatarFallback>AD</AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle>Jakob Grant</CardTitle>
-                <CardDescription>jakob@magickml.com</CardDescription>
+                <CardTitle>Ada Lovelace</CardTitle>
+                <CardDescription>ada@example.com</CardDescription>
               </div>
             </div>
           </CardHeader>
